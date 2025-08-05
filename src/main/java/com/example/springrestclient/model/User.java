@@ -1,6 +1,7 @@
 package com.example.springrestclient.model;
 
 public class User {
+
     private Long id;
     private String name;
     private String lastName;
@@ -15,6 +16,7 @@ public class User {
         this.age = age;
     }
 
+    //region getter, setter, toString
     public Long getId() {
         return id;
     }
@@ -49,11 +51,8 @@ public class User {
 
     @Override
     public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", lastName='" + lastName + '\'' +
-                ", age=" + age +
-                '}';
+        return String.format("User{ id= %s, name= %s, lastName= %s, age= %s }",
+                id, name, lastName, age);
     }
+    //endregion
 }
