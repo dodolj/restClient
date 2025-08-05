@@ -1,5 +1,6 @@
-package com.example.springrestclient;
+package com.example.springrestclient.init;
 
+import com.example.springrestclient.SpringRestClientApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 
