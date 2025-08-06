@@ -1,4 +1,4 @@
-package com.example.springrestclient.model;
+package com.example.springrestclient;
 
 public class User {
 
