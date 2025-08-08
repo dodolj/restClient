@@ -1,5 +1,7 @@
 package com.example.springrestclient;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.http.HttpHeaders;
@@ -12,7 +14,8 @@ import org.springframework.web.client.RestClient;
 public class RestClientRunner implements ApplicationRunner {
 
     private final RestClient restClient;
-    private final String URL = "http://94.198.50.185:7081/api/users";
+    private final String URL = "/api/users";
+    private final static Logger logger = LoggerFactory.getLogger(RestClientRunner.class);
 
     public RestClientRunner(RestClient restClient) {
         this.restClient = restClient;
@@ -20,34 +23,36 @@ public class RestClientRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        // 1. GET all users and sessionId
+
+        // 1. GET
         ResponseEntity<String> response = restClient.get()
                 .uri(URL)
                 .retrieve()
                 .toEntity(String.class);
 
-        String sessionId = response.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
-
-        System.out.println("=== GET Response ===");
-        System.out.println(response.getBody());
-        System.out.println("=== SESSION ID ===");
-        System.out.println(sessionId);
+        String rawCookie = response.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        String sessionId = null;
+        if (rawCookie != null) {
+            for (String cookiePart : rawCookie.split(";")) {
+                if (cookiePart.trim().startsWith("JSESSIONID")) {
+                    sessionId = cookiePart.trim();
+                    break;
+                }
+            }
+        }
 
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.COOKIE, sessionId);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         // 2. POST
-        User newUser = new User(3L, "James", "Brown", (byte) 30);
+        User user = new User(3L, "James", "Brown", (byte) 30);
         String code1 = restClient.post()
                 .uri(URL)
                 .headers(h -> h.addAll(headers))
-                .body(newUser)
+                .body(user)
                 .retrieve()
                 .body(String.class);
-
-        System.out.println("=== POST Response ===");
-        System.out.println(code1);
 
         // 3. PUT
         User updatedUser = new User(3L, "Thomas", "Shelby", (byte) 30);
@@ -58,22 +63,13 @@ public class RestClientRunner implements ApplicationRunner {
                 .retrieve()
                 .body(String.class);
 
-        System.out.println("=== PUT Response ===");
-        System.out.println(code2);
-
         // 4. DELETE
         String code3 = restClient.delete()
-                .uri(URL + "/3")
+                .uri(URL + user.getId())
                 .headers(h -> h.addAll(headers))
                 .retrieve()
                 .body(String.class);
 
-        System.out.println("=== DELETE Response ===");
-        System.out.println(code3);
-
-        // 5. FINAL
-        String finalCode = code1 + code2 + code3;
-        System.out.println("=== FINAL Response ===");
-        System.out.println(finalCode);
+        logger.info(code1 + code2 + code3);
     }
 }
