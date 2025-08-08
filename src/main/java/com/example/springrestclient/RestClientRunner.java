@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.util.Arrays;
+
 @Component
 public class RestClientRunner implements ApplicationRunner {
 
@@ -30,16 +32,14 @@ public class RestClientRunner implements ApplicationRunner {
                 .retrieve()
                 .toEntity(String.class);
 
+        // Cookie
         String rawCookie = response.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
-        String sessionId = null;
-        if (rawCookie != null) {
-            for (String cookiePart : rawCookie.split(";")) {
-                if (cookiePart.trim().startsWith("JSESSIONID")) {
-                    sessionId = cookiePart.trim();
-                    break;
-                }
-            }
-        }
+        assert rawCookie != null;
+        String sessionId = Arrays.stream(rawCookie.split(";"))
+                .map(String::trim)
+                .filter(c -> c.startsWith("JSESSIONID"))
+                .findFirst()
+                .orElse(null);
 
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.COOKIE, sessionId);
@@ -65,7 +65,7 @@ public class RestClientRunner implements ApplicationRunner {
 
         // 4. DELETE
         String code3 = restClient.delete()
-                .uri(URL + user.getId())
+                .uri(URL + "/{id}", user.getId())
                 .headers(h -> h.addAll(headers))
                 .retrieve()
                 .body(String.class);
